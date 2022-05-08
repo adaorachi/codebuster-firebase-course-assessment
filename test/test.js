@@ -97,5 +97,82 @@ describe('Firestore security rules', () => {
       await firebase.assertFails(testDoc.delete());
     });
   });
+
+  describe('Test users document security rules', () => {
+    const displayName = 'Sarah Adams';
+
+    const userDocRef = (uid = myId) => {
+      const db = getFirestore(myAuth);
+      return db.collection('users').doc(uid);
+    };
+
+    it('Allow authenticated user to create their own profile', async () => {
+      await createUserDoc();
+
+      const testDoc = userDocRef();
+      await firebase.assertSucceeds(
+        testDoc.set({ displayName: 'Adaora Chuka', uid: myId })
+      );
+    });
+
+    it('Allow authenticated user to view and update their own profile', async () => {
+      await createUserDoc();
+      const testDoc = userDocRef();
+
+      await firebase.assertSucceeds(testDoc.get());
+      await firebase.assertSucceeds(testDoc.set({ displayName }));
+    });
+
+    it('Allow authenticated user to view other users profile', async () => {
+      await createUserDoc(myId);
+
+      const testDoc = userDocRef(theirId);
+      await firebase.assertSucceeds(testDoc.get());
+    });
+
+    it("Don't allow authenticated user to create or update other users profile if NOT ADMIN", async () => {
+      await createUserDoc(myId);
+
+      const testDoc = userDocRef(theirId);
+
+      await firebase.assertFails(testDoc.update({ displayName }));
+      await firebase.assertFails(
+        testDoc.set({ about: 'I am a developer', isAdmin: false })
+      );
+    });
+
+    it('Allow authenticated user to update other users profile if ADMIN', async () => {
+      const isAdminUser = createUserDoc(myId, true);
+      await isAdminUser;
+
+      const isOtherUser = createUserDoc(theirId);
+      await isOtherUser;
+
+      const testDoc = userDocRef(theirId);
+
+      await firebase.assertSucceeds(testDoc.update({ displayName }));
+    });
+
+    it("Don't allow authenticated user to update their or other users ADMIN profile field", async () => {
+      await createUserDoc();
+
+      const testDocOne = userDocRef();
+      const testDocTwo = userDocRef(theirId);
+
+      await firebase.assertFails(testDocOne.set({ isAdmin: true }));
+      await firebase.assertFails(testDocTwo.update({ isAdmin: false }));
+    });
+
+    it("Don't allow authenticated ADMIN user to update the ADMIN profile field", async () => {
+      const isAdminUser = createUserDoc(theirId, true);
+
+      await isAdminUser;
+      const testDoc = userDocRef();
+
+      await firebase.assertFails(testDoc.set({ isAdmin: true }));
+      await firebase.assertFails(testDoc.update({ isAdmin: false }));
+    });
+  });
+
 });
 
