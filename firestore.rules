@@ -13,7 +13,7 @@ service cloud.firestore {
 
     // Add new rules here
 
-     function incomingData() {
+    function incomingData() {
       return request.resource.data;
     }
 
@@ -33,13 +33,31 @@ service cloud.firestore {
       return isSignedIn() && isUserExist();
     }
 
-    function isOwner() {
-      return request.auth.uid == existingData().uid;
+    function isOwner(userId) {
+      return request.auth.uid == existingData().uid || request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+  		return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin;
+		}
+
+    function fieldUpdateNotAllow(list) {
+      return (!incomingData().keys().hasAny(list)) || (!incomingData().diff(existingData()).affectedKeys()
+        .hasAny(list));
     }
 
     match /todos/{docId} {
       allow create: if isSignedInAndExist();
-      allow read, update, delete: if isSignedInAndExist() && isOwner();
+      allow read, update, delete: if isSignedInAndExist() && isOwner(docId);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedInAndExist();
+      allow create: if isSignedInAndExist() && isCreator(userId) && incomingData().uid == userId;
+      allow update: if isSignedInAndExist()
+      && ((isOwner(userId) && isCreator(userId)) || isAdmin())
+      && fieldUpdateNotAllow(['isAdmin']);
+      allow delete: if false;
     }
   }
 }
