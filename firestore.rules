@@ -53,9 +53,9 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedInAndExist();
-      allow create: if isSignedInAndExist() && isCreator(userId) && incomingData().uid == userId;
+      allow create: if isSignedInAndExist() && isOwner(userId) && incomingData().uid == userId;
       allow update: if isSignedInAndExist()
-      && ((isOwner(userId) && isCreator(userId)) || isAdmin())
+      && (isOwner(userId) || isAdmin())
       && fieldUpdateNotAllow(['isAdmin']);
       allow delete: if false;
     }

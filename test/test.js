@@ -174,5 +174,28 @@ describe('Firestore security rules', () => {
     });
   });
 
+  describe('Test any default document security rules', () => {
+    it("Don't allow any user to read or write to any document by default", async () => {
+      const docId = 'doc123';
+      const admin = getAdminFirestore();
+      await admin
+        .collection('test_documents')
+        .doc(docId)
+        .set({ content: 'before', authorId: theirId });
+
+      const db = getFirestore(myAuth);
+      const testDoc = db.collection('test_documents').doc(docId);
+      await firebase.assertFails(testDoc.get());
+      await firebase.assertFails(testDoc.update({ content: 'after' }));
+      await firebase.assertFails(testDoc.delete());
+    });
+  });
+
+});
+
+// Delete the firebase app instances after all of our tests have run
+afterEach(async () => {
+  const cleanUpApps = firebase.apps().map((app) => app.delete());
+  await Promise.all(cleanUpApps);
 });
 
