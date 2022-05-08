@@ -37,31 +37,65 @@ describe('Setup', () => {
   it('Understands basic addition, sanity check mocha working', () => {
     assert.equal(2 + 2, 4);
   });
+});
 
+
+describe('Firestore security rules', () => {
   // Test firestore rules
-  it('Allow a user to edit their own document', async () => {
+
+  const createUserDoc = async (uid = myId, isAdmin = false) => {
+    const admin = getAdminFirestore();
+    await admin
+      .collection('users')
+      .doc(uid)
+      .set({ displayName: 'Dominic Steve', uid, isAdmin });
+  };
+
+  describe('Test todo document security rules', () => {
     const docId = 'form123';
-    const admin = getAdminFirestore();
-    await admin
-      .collection('test_documents')
-      .doc(docId)
-      .set({ content: 'before', authorId: myId });
 
-    const db = getFirestore(myAuth);
-    const testDoc = db.collection('test_documents').doc(docId);
-    await firebase.assertSucceeds(testDoc.update({ content: 'after' }));
-  });
+    const createTodoDoc = async (uid = myId) => {
+      const admin = getAdminFirestore();
+      await admin
+        .collection('todos')
+        .doc(docId)
+        .set({ name: 'Learn to fly', uid });
+    };
 
-  it('Don\'t allow a user to edit somebody else\'s document', async () => {
-    const docId = 'doc123';
-    const admin = getAdminFirestore();
-    await admin
-      .collection('test_documents')
-      .doc(docId)
-      .set({ content: 'before', authorId: theirId });
+    const todoDocRef = () => {
+      const db = getFirestore(myAuth);
+      return db.collection('todos').doc(docId);
+    };
 
-    const db = getFirestore(myAuth);
-    const testDoc = db.collection('test_documents').doc(docId);
-    await firebase.assertFails(testDoc.update({ content: 'after' }));
+    it('Allow authenticated user to create their own todo', async () => {
+      await createUserDoc();
+
+      const testDoc = todoDocRef();
+      await firebase.assertSucceeds(
+        testDoc.set({ name: 'Learn to swim', uid: myId })
+      );
+    });
+
+    it('Allow authenticated user to read, edit, delete their own todo', async () => {
+      await createUserDoc();
+      await createTodoDoc();
+
+      const testDoc = todoDocRef();
+
+      await firebase.assertSucceeds(testDoc.get());
+      await firebase.assertSucceeds(testDoc.update({ name: 'Learn to swim' }));
+      await firebase.assertSucceeds(testDoc.delete());
+    });
+
+    it("Don't allow authenticated user to read, edit, delete other users todo", async () => {
+      await createTodoDoc(theirId);
+
+      const testDoc = todoDocRef();
+
+      await firebase.assertFails(testDoc.get());
+      await firebase.assertFails(testDoc.update({ name: 'Learn to swim' }));
+      await firebase.assertFails(testDoc.delete());
+    });
   });
 });
+
