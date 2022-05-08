@@ -12,5 +12,30 @@ service cloud.firestore {
     }
 
     // Add new rules here
+
+     function incomingData() {
+      return request.resource.data;
+    }
+
+    function existingData() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUserExist() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isSignedInAndExist() {
+      return isSignedIn() && isUserExist();
+    }
+
+    function isOwner() {
+      return request.auth.uid == existingData().uid;
+    }
+
   }
 }
