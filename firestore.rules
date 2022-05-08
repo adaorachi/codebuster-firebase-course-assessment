@@ -12,5 +12,52 @@ service cloud.firestore {
     }
 
     // Add new rules here
+
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    function existingData() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUserExist() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isSignedInAndExist() {
+      return isSignedIn() && isUserExist();
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == existingData().uid || request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+  		return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin;
+		}
+
+    function fieldUpdateNotAllow(list) {
+      return (!incomingData().keys().hasAny(list)) || (!incomingData().diff(existingData()).affectedKeys()
+        .hasAny(list));
+    }
+
+    match /todos/{docId} {
+      allow create: if isSignedInAndExist();
+      allow read, update, delete: if isSignedInAndExist() && isOwner(docId);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedInAndExist();
+      allow create: if isSignedInAndExist() && isOwner(userId) && incomingData().uid == userId;
+      allow update: if isSignedInAndExist()
+      && (isOwner(userId) || isAdmin())
+      && fieldUpdateNotAllow(['isAdmin']);
+      allow delete: if false;
+    }
   }
 }
