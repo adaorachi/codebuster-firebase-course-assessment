@@ -1,75 +1,130 @@
-# Setting up a React And Firebase Project
+## Firebase Security Rules
 
-## Prerequisites
+![react-firebase-starter](https://user-images.githubusercontent.com/68360696/129435412-11320287-3afd-4e9d-8595-7194bc358c47.png)
 
-You will need to have the following installed to use this course: 
+[Firebase Security Rules](https://firebase.google.com/docs/rules/rules-behavior) provide robust, completely customizable protection for your data in Cloud Firestore, Realtime Database, and Cloud Storage.
+These rules stand between your data and the users. They decide who is allowed to get access to your data.
+Every request for every CRUD operation on your data goes through them and they make final decision if that request should go through or not.
+In this chapter to our Firebase Course, we will be writing and adding security rules to our application.
 
-* [Node](https://nodejs.org/en/)
-* [Java DK](https://docs.oracle.com/en/java/javase/16/install/overview-jdk-installation.html#GUID-8677A77F-231A-40F7-98B9-1FD0B48C346A)
-* [Firebase CLI](https://github.com/firebase/firebase-tools)
+### Table of Contents
 
-## Setup Guide
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [SetUp Guide](#setup-guide)
+- [Firebase SetUp](#firebase-setup)
+- [Project Functionality](#project-functionality)
+- [Test](#test)
+- [Deploy](#deploy)
+- [Contribute](#contribute)
+- [License](#license)
 
-### Setting Up React
+### Tech Stack
 
-Checkout this branch:
-```git checkout mentorship```
+- [Firebase](https://firebase.google.com/) - Firestore database, auth, cloud functions, local emulators
+- [React](https://reactjs.org/)
+- [Webpack](https://webpack.js.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [React Router](https://reactrouter.com/web)
+- [react-firebase-hooks](https://github.com/CSFrequency/react-firebase-hooks/)
+- [React Helmet](https://www.npmjs.com/package/react-helmet) - SEO
+- [Mocha](https://mochajs.org/) - testing for Firebase
+- [ESLint](https://eslint.org/) - based on AirBnB config
+
+### Prerequisites
+
+You will need the following to use this starter:
+
+- [Node](https://nodejs.org/en/)
+- [Java DK](https://docs.oracle.com/en/java/javase/16/install/overview-jdk-installation.html#GUID-8677A77F-231A-40F7-98B9-1FD0B48C346A)
+- [Firebase CLI](https://github.com/firebase/firebase-tools)
+
+### SetUp Guide
+
+Once you have installed the required package shown on the [Required Installations](#required-installations), follow these [instructions]() to setup the app locally.
+
+Clone this repo:
+
+```Shell
+your@pc:~$ git clone https://github.com/adaorachi/codebuster-firebase-course-assessment.git
+```
+
+Make sure to checkout to the branch named add-firebase-rules:
+
+```Shell
+your@pc:~$ git checkout add-firebase-rules
+```
 
 Install the dependencies:
-```npm ci```
 
-Do the same in the `/functions` folder to use Firebase cloud functions:
-```cd functions && npm ci```
-
-At this point, the client side should work. You can launch it with:
-```cd .. && npm start``` 
-
-### Setting Up Firebase
-
-You may have noticed that data isn't yet being fetched from Firebase. We need to connect our code to Firebase to make it work.
-
-> In this course, we will be using a demo Firebase project. If you want to know how to connect a real project, see [React and Firebase Starter docs](https://github.com/codebusters-ca/react-firebase-starter#react--firebase-starter).
-
-In your code editor, leave the client app running and open a new terminal. Log into Firebase CLI:
-```cd .\firebase-course\ && firebase login```
-
-Start connecting your Firebase project: ```firebase init```
-
-To choose the features we will be using, choose the following answers when prompted by the CLI:
-
-```
-* ? Which Firebase features do you want to set up for this directory?
-  Firestore
-  Functions
-  Emulators
-
-* First, let's associate this project directory with a Firebase project.
-? Please select an option:
-  Don't set up a default project
-  
-* ? What file should be used for Firestore Rules? firestore.rules
-? File firestore.rules already exists. Do you want to overwrite it with the Firestore Rules from the Firebase Console? No
-
-? What file should be used for Firestore indexes? firestore.indexes.json
-? File firestore.indexes.json already exists. Do you want to overwrite it with the Firestore Indexes from the Firebase Console? No
-
-? File functions/package.json already exists. Overwrite? No
-
-? Which Firebase emulators do you want to set up?
-  Authentication Emulator
-  Functions Emulator
-  Firestore Emulator
+```Shell
+your@pc:~$ cd .\codebuster-firebase-course-assessment\ && npm install
 ```
 
-Now that we've initialized the local Firebase directory, we can start using the demo project. Run Firebase Emulators with `npm run emulators` at the root directory. 
-If your client app is still running, you will see `Hello from Firestore Emulator` appear there.
+Also install the dependencies in `/functions` folder to use Firebase cloud functions:
 
-Congratulations! The setup process is now complete.
+```Shell
+your@pc:~$ cd functions && npm install
+```
 
-## Contribute
+Return to the client side and start the app:
 
-🚧 This tutorial is a work in progress 🚧 We ❤️ feedback and help from fellow devs! If you found a bug, create an [issue](https://github.com/codebusters-ca/firebase-course/issues/new?labels=bug) or send us a [pull request](https://github.com/codebusters-ca/firebase-course/compare).
+```Shell
+your@pc:~$ cd .. && npm start
+```
 
-## Licence
+### Firebase Setup
 
-This project is licensed under the [MIT license](https://github.com/codebusters-ca/firebase-course/blob/main/LICENSE).
+Follow these [instructions](https://github.com/codebusters-ca/firebase-course/blob/mentorship/README.md#setting-up-firebase) to setup and run the firebase tools for your app.
+
+### Project Functionality
+
+In this app, it has multiple users. Each of the users has a profile and a to-do list. There is also a directory of users that allows everyone to view each other's profiles.
+
+The main goal of this project is to add and update the security rules located in `firestore.rules` in the root directory. These rules should control the database access like granting certain access to certain users.
+
+The security rule functionalities should give or deny access in this manner:
+
+- Any authenticated user can create to-do items for themselves.
+- Any authenticated user can view and update their to-do items.
+- Any authenticated user can create a profile and view others' profiles.
+- Any authenticated user can edit their profile.
+- Admins can edit any user's profile.
+- isAdmin field cannot be updated by anyone.
+
+Kindly view the `firestore.rules` file for full implementation of the above functionalities.
+
+### Test
+
+This uses a TDD approach to test all security rule functionalites for this application and ensure they work as expected.
+
+Start the firebase emulators:
+
+```Shell
+your@pc:~$ npm run emulators
+```
+
+In another terminal, run:
+
+```Shell
+your@pc:~$ npm test
+```
+
+You should see a list of 12 test cases that all pass.
+
+### Deploy
+
+```Shell
+your@pc:~$ npm run build
+```
+
+### Contribute
+
+We ❤️ feedback and help from fellow devs! Check out [open issues](https://github.com/codebusters-ca/react-firebase-starter/issues), create a [new one](https://github.com/codebusters-ca/react-firebase-starter/issues/new?labels=bug), or send us a [pull request](https://github.com/codebusters-ca/react-firebase-starter/compare).
+
+### License
+
+This project is licensed under the [MIT license](https://github.com/codebusters-ca/react-firebase-starter/blob/main/LICENSE).
+© 2022 GitHub, Inc.
+Terms
+Privacy
