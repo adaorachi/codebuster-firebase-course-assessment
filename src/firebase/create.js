@@ -13,6 +13,11 @@ async function create(collection, data) {
     throw new ReferenceError('No path or data provided');
   }
 
+   // Throw error when the todo name is empty
+  if (data && data.name.trim() === '') {
+    throw new ReferenceError('No todo name provided');
+  }
+
   // Remove any empty values
   const newData = cleanData(data);
 
