@@ -37,5 +37,9 @@ service cloud.firestore {
       return request.auth.uid == existingData().uid;
     }
 
+    match /todos/{docId} {
+      allow create: if isSignedInAndExist();
+      allow read, update, delete: if isSignedInAndExist() && isOwner();
+    }
   }
 }
